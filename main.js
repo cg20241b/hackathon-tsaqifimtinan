@@ -19,14 +19,18 @@ camera.position.z = 5;
 
 const loader = new FontLoader();
 loader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', function (font) {
-    const textMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    const alphabetColor = new THREE.Color('#f3e3d3');
+    const digitColor = new THREE.Color(1 - alphabetColor.r, 1 - alphabetColor.g, 1 - alphabetColor.b);
+
+    const alphabetMaterial = new THREE.MeshBasicMaterial({ color: alphabetColor });
+    const digitMaterial = new THREE.MeshBasicMaterial({ color: digitColor });
 
     const textGeometryF = new TextGeometry('F', {
         font: font,
         size: 1,
         height: 0.1,
     });
-    const textMeshF = new THREE.Mesh(textGeometryF, textMaterial);
+    const textMeshF = new THREE.Mesh(textGeometryF, alphabetMaterial);
     textMeshF.position.set(-3, 0, 0); // Position on the left side
     scene.add(textMeshF);
 
@@ -35,7 +39,7 @@ loader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json
         size: 1,
         height: 0.1,
     });
-    const textMesh1 = new THREE.Mesh(textGeometry1, textMaterial);
+    const textMesh1 = new THREE.Mesh(textGeometry1, digitMaterial);
     textMesh1.position.set(3, 0, 0); // Position on the right side
     scene.add(textMesh1);
 });
