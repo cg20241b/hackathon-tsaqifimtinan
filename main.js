@@ -8,6 +8,9 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 
+// Define movement speed
+const CAMERA_SPEED = 0.1;
+
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setAnimationLoop(animate);
@@ -235,6 +238,14 @@ document.addEventListener('keydown', (event) => {
             cube.position.y -= moveSpeed;
             // Update point light position to follow cube
             pointLight.position.copy(cube.position);
+            break;
+        case 'a':
+            // Move camera left (negative X)
+            camera.position.x += CAMERA_SPEED;
+            break;
+        case 'd':
+            // Move camera right (positive X)
+            camera.position.x -= CAMERA_SPEED;
             break;
     }
 });
