@@ -20,9 +20,9 @@ document.body.appendChild(renderer.domElement);
 const renderScene = new RenderPass(scene, camera);
 const bloomPass = new UnrealBloomPass(
     new THREE.Vector2(window.innerWidth, window.innerHeight),
-    1.0,  // bloom strength
-    0.4,  // radius
-    0.85  // threshold
+    1,  // bloom strength
+    0.5,  // radius
+    0.3  // threshold
 );
 
 const composer = new EffectComposer(renderer);
@@ -36,37 +36,70 @@ scene.add(cube);
 
 camera.position.z = 5;
 
+// Add fog to the scene
+scene.fog = new THREE.FogExp2(0x000000, 0.1);
+
+// Add stars in the background
+const starGeometry = new THREE.BufferGeometry();
+const starCount = 1000;
+const starPositions = new Float32Array(starCount * 3);
+
+for(let i = 0; i < starCount * 3; i += 3) {
+    starPositions[i] = (Math.random() - 0.5) * 100;
+    starPositions[i+1] = (Math.random() - 0.5) * 100;
+    starPositions[i+2] = (Math.random() - 0.5) * 100;
+}
+
+starGeometry.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+const starMaterial = new THREE.PointsMaterial({ color: 0xffffff, size: 0.1 });
+const stars = new THREE.Points(starGeometry, starMaterial);
+scene.add(stars);
+
 // Adjust renderer settings for better glow visibility
 renderer.setClearColor(0x000000); // Black background
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.5; // Increase exposure
+renderer.toneMapping = THREE.ReinhardToneMapping;
+renderer.toneMappingExposure = 2.0;
 renderer.outputEncoding = THREE.sRGBEncoding;
 
 // Update existing cube with glow material
 const cubeGeometry = new THREE.BoxGeometry(1, 1, 1);
+// Update the glowShaderMaterial
 const glowShaderMaterial = new THREE.ShaderMaterial({
     uniforms: {
         glowColor: { value: new THREE.Color(0xffffff) },
+        time: { value: 0 }
     },
     vertexShader: `
         varying vec3 vNormal;
+        varying vec3 vPosition;
         void main() {
             vNormal = normalize(normalMatrix * normal);
+            vPosition = position;
             gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
         }
     `,
     fragmentShader: `
         uniform vec3 glowColor;
+        uniform float time;
         varying vec3 vNormal;
+        varying vec3 vPosition;
         void main() {
-            float intensity = pow(0.7 - dot(vNormal, vec3(0.0, 0.0, 1.0)), 2.0);
-            gl_FragColor = vec4(1.0, 1.0, 1.0, intensity);
+            vec3 color = vec3(
+                sin(time * 0.5) * 0.5 + 0.5,
+                cos(time * 0.3) * 0.5 + 0.5,
+                sin(time * 0.7) * 0.5 + 0.5
+            );
+            float intensity = pow(0.8 - dot(vNormal, vec3(0, 0, 1.0)), 2.0);
+            gl_FragColor = vec4(color * glowColor, 1.0) * (intensity + 0.5);
         }
     `,
-    side: THREE.FrontSide,
-    blending: THREE.AdditiveBlending,
-    transparent: true
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending
 });
+
+// Update the time uniform in animate()
+glowShaderMaterial.uniforms.time.value = performance.now() * 0.001;
 
 // Update existing cube
 cube.geometry = cubeGeometry;
